@@ -29,27 +29,47 @@ export default function Index() {
   const { todos } = useLoaderData<typeof loader>()
 
   return (
-    <>
-      <fetcher.Form method="post">
-        <input type="text" name="title" placeholder="Add ToDo" />
-        <button type="submit" name="_action" value="add">
+    <section className="flex flex-col items-center py-12">
+      <fetcher.Form method="post" className="pb-2 mb-2 border-b">
+        <input
+          type="text"
+          name="title"
+          placeholder="Add ToDo"
+          className="px-4 py-1.5 rounded-md border border-gray-200"
+        />
+        <button
+          type="submit"
+          name="_action"
+          value="add"
+          className="w-12 py-1.5 ml-2 rounded-md border border-gray-200 hover:bg-gray-200"
+        >
           Add
         </button>
       </fetcher.Form>
       <Suspense fallback={<p>loading...</p>}>
         <Await resolve={todos}>
           {(todos) => (
-            <ul>
+            <ul className="space-y-2">
               {todos.map((todo) => (
                 <li key={todo.id}>
-                  <fetcher.Form method="post" className="inline">
+                  <fetcher.Form method="post" className="inline-block">
                     <input type="hidden" name="id" value={todo.id} />
-                    <input type="text" name="title" defaultValue={todo.title} />
+                    <input
+                      type="text"
+                      name="title"
+                      defaultValue={todo.title}
+                      className="px-4 py-1.5 rounded-md"
+                    />
                     <button type="submit" name="_action" value="edit" />
-                  </fetcher.Form>{' '}
+                  </fetcher.Form>
                   <fetcher.Form method="post" className="inline">
                     <input type="hidden" name="id" value={todo.id} />
-                    <button type="submit" name="_action" value="delete">
+                    <button
+                      type="submit"
+                      name="_action"
+                      value="delete"
+                      className="w-12 py-1.5 ml-2 rounded-md border border-gray-200 hover:bg-gray-200"
+                    >
                       🗑
                     </button>
                   </fetcher.Form>
@@ -59,7 +79,7 @@ export default function Index() {
           )}
         </Await>
       </Suspense>
-    </>
+    </section>
   )
 }
 
