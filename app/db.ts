@@ -2,9 +2,12 @@ import { drizzle } from 'drizzle-orm/d1'
 import { todos } from './schema'
 import { eq } from 'drizzle-orm'
 
+// const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 export const getTodos = async (db_binding: D1Database) => {
   const db = drizzle(db_binding)
   const result = await db.select().from(todos).all()
+  // await sleep(3000)
   return result
 }
 

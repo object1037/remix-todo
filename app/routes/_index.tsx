@@ -1,12 +1,13 @@
-import { json } from '@remix-run/cloudflare'
+import { defer, json } from '@remix-run/cloudflare'
 import type {
   ActionFunctionArgs,
   LoaderFunctionArgs,
   MetaFunction,
 } from '@remix-run/cloudflare'
-import { useFetcher, useLoaderData } from '@remix-run/react'
+import { Await, useFetcher, useLoaderData } from '@remix-run/react'
 import { addTodo, deleteTodo, editTodo, getTodos } from '~/db'
 import invariant from 'tiny-invariant'
+import { Suspense } from 'react'
 
 interface Env {
   DB: D1Database
@@ -18,9 +19,9 @@ export const meta: MetaFunction = () => {
 
 export const loader = async ({ context }: LoaderFunctionArgs) => {
   const env = context.env as Env
-  const results = await getTodos(env.DB)
+  const results = getTodos(env.DB)
 
-  return json({ todos: results })
+  return defer({ todos: results })
 }
 
 export default function Index() {
@@ -35,23 +36,29 @@ export default function Index() {
           Add
         </button>
       </fetcher.Form>
-      <ul>
-        {todos.map((todo) => (
-          <li key={todo.id}>
-            <fetcher.Form method="post" className="inline">
-              <input type="hidden" name="id" value={todo.id} />
-              <input type="text" name="title" defaultValue={todo.title} />
-              <button type="submit" name="_action" value="edit" />
-            </fetcher.Form>{' '}
-            <fetcher.Form method="post" className="inline">
-              <input type="hidden" name="id" value={todo.id} />
-              <button type="submit" name="_action" value="delete">
-                🗑
-              </button>
-            </fetcher.Form>
-          </li>
-        ))}
-      </ul>
+      <Suspense fallback={<p>loading...</p>}>
+        <Await resolve={todos}>
+          {(todos) => (
+            <ul>
+              {todos.map((todo) => (
+                <li key={todo.id}>
+                  <fetcher.Form method="post" className="inline">
+                    <input type="hidden" name="id" value={todo.id} />
+                    <input type="text" name="title" defaultValue={todo.title} />
+                    <button type="submit" name="_action" value="edit" />
+                  </fetcher.Form>{' '}
+                  <fetcher.Form method="post" className="inline">
+                    <input type="hidden" name="id" value={todo.id} />
+                    <button type="submit" name="_action" value="delete">
+                      🗑
+                    </button>
+                  </fetcher.Form>
+                </li>
+              ))}
+            </ul>
+          )}
+        </Await>
+      </Suspense>
     </>
   )
 }
