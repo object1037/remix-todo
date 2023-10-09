@@ -5,7 +5,7 @@ import type {
   MetaFunction,
 } from '@remix-run/cloudflare'
 import { useFetcher, useLoaderData } from '@remix-run/react'
-import { addTodos, getTodos } from '~/db'
+import { addTodo, deleteTodo, editTodo, getTodos } from '~/db'
 import invariant from 'tiny-invariant'
 
 interface Env {
@@ -31,11 +31,25 @@ export default function Index() {
     <>
       <fetcher.Form method="post">
         <input type="text" name="title" placeholder="Add ToDo" />
-        <button type="submit">Add</button>
+        <button type="submit" name="_action" value="add">
+          Add
+        </button>
       </fetcher.Form>
       <ul>
         {todos.map((todo) => (
-          <li key={todo.id}>{todo.title}</li>
+          <li key={todo.id}>
+            <fetcher.Form method="post" className="inline">
+              <input type="hidden" name="id" value={todo.id} />
+              <input type="text" name="title" defaultValue={todo.title} />
+              <button type="submit" name="_action" value="edit" />
+            </fetcher.Form>{' '}
+            <fetcher.Form method="post" className="inline">
+              <input type="hidden" name="id" value={todo.id} />
+              <button type="submit" name="_action" value="delete">
+                🗑
+              </button>
+            </fetcher.Form>
+          </li>
         ))}
       </ul>
     </>
@@ -44,15 +58,37 @@ export default function Index() {
 
 export const action = async ({ request, context }: ActionFunctionArgs) => {
   const env = context.env as Env
-  const todo = (await request.formData()).get('title')
+  const todo = Object.fromEntries(await request.formData())
 
-  invariant(todo, 'title is required')
-  if (typeof todo !== 'string') {
-    throw new Error('title must be a string')
+  switch (todo._action) {
+    case 'add': {
+      invariant(todo.title, 'missing title')
+      invariant(typeof todo.title === 'string', 'title must be a string')
+      const { success } = await addTodo(env.DB, todo.title)
+      invariant(success, 'failed to add todo')
+      return json({ success })
+    }
+
+    case 'edit': {
+      invariant(todo.title, 'missing title')
+      invariant(todo.id, 'missing id')
+      invariant(typeof todo.title === 'string', 'title must be a string')
+      invariant(!isNaN(Number(todo.id)), 'id must be a number')
+      const { success } = await editTodo(env.DB, Number(todo.id), todo.title)
+      invariant(success, 'failed to edit todo')
+      return json({ success })
+    }
+
+    case 'delete': {
+      invariant(todo.id, 'missing id')
+      invariant(!isNaN(Number(todo.id)), 'id must be a number')
+      const { success } = await deleteTodo(env.DB, Number(todo.id))
+      invariant(success, 'failed to delete todo')
+      return json({ success })
+    }
+
+    default: {
+      return json({ success: false }, { status: 400 })
+    }
   }
-
-  const { success } = await addTodos(env.DB, todo)
-  invariant(success, 'failed to add todo')
-
-  return json({ success })
 }
