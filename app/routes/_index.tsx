@@ -5,7 +5,7 @@ import type {
   MetaFunction,
 } from '@remix-run/cloudflare'
 import { Await, useFetcher, useLoaderData } from '@remix-run/react'
-import { addTodo, deleteTodo, editTodo, getTodos } from '~/db'
+import { addTodo, deleteTodo, editTodo, getTodos } from '~/db.server'
 import invariant from 'tiny-invariant'
 import { Suspense } from 'react'
 
