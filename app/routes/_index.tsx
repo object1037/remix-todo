@@ -4,7 +4,13 @@ import type {
   LoaderFunctionArgs,
   MetaFunction,
 } from '@remix-run/cloudflare'
-import { Await, useFetcher, useLoaderData } from '@remix-run/react'
+import {
+  Await,
+  isRouteErrorResponse,
+  useFetcher,
+  useLoaderData,
+  useRouteError,
+} from '@remix-run/react'
 import {
   addTodo,
   deleteTodo,
@@ -37,7 +43,7 @@ export default function Index() {
   const { todos } = useLoaderData<typeof loader>()
 
   return (
-    <section className="flex flex-col items-center py-12">
+    <section className="flex flex-col items-center py-4">
       <fetcher.Form method="post" className="pb-2 mb-2 border-b">
         <input
           type="text"
@@ -122,7 +128,33 @@ export const action = async ({ request, context }: ActionFunctionArgs) => {
     }
 
     default: {
-      return json({ success: false }, { status: 400 })
+      throw new Response('unknown action', { status: 400 })
     }
+  }
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError()
+
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div>
+        <h1>
+          {error.status} {error.statusText}
+        </h1>
+        <p>{error.data}</p>
+      </div>
+    )
+  } else if (error instanceof Error) {
+    return (
+      <div>
+        <h1>Error</h1>
+        <p>{error.message}</p>
+        <p>The stack trace is:</p>
+        <pre>{error.stack}</pre>
+      </div>
+    )
+  } else {
+    return <h1>Unknown Error</h1>
   }
 }

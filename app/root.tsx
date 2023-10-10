@@ -24,6 +24,7 @@ export default function App() {
         <Links />
       </head>
       <body>
+        <h1 className="text-center text-2xl m-6">Remix ToDo App</h1>
         <Outlet />
         <ScrollRestoration />
         <Scripts />
