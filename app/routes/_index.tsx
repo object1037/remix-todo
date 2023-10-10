@@ -5,7 +5,15 @@ import type {
   MetaFunction,
 } from '@remix-run/cloudflare'
 import { Await, useFetcher, useLoaderData } from '@remix-run/react'
-import { addTodo, deleteTodo, editTodo, getTodos } from '~/db.server'
+import {
+  addTodo,
+  deleteTodo,
+  deleteTodoSchema,
+  editTodo,
+  getTodos,
+  insertTodoSchema,
+  selectTodoSchema,
+} from '~/db.server'
 import invariant from 'tiny-invariant'
 import { Suspense } from 'react'
 
@@ -89,27 +97,26 @@ export const action = async ({ request, context }: ActionFunctionArgs) => {
 
   switch (todo._action) {
     case 'add': {
-      invariant(todo.title, 'missing title')
-      invariant(typeof todo.title === 'string', 'title must be a string')
-      const { success } = await addTodo(env.DB, todo.title)
+      const todo_parsed = insertTodoSchema.parse(todo)
+      const { success } = await addTodo(env.DB, todo_parsed.title)
       invariant(success, 'failed to add todo')
       return json({ success })
     }
 
     case 'edit': {
-      invariant(todo.title, 'missing title')
-      invariant(todo.id, 'missing id')
-      invariant(typeof todo.title === 'string', 'title must be a string')
-      invariant(!isNaN(Number(todo.id)), 'id must be a number')
-      const { success } = await editTodo(env.DB, Number(todo.id), todo.title)
+      const todo_parsed = selectTodoSchema.parse(todo)
+      const { success } = await editTodo(
+        env.DB,
+        todo_parsed.id,
+        todo_parsed.title
+      )
       invariant(success, 'failed to edit todo')
       return json({ success })
     }
 
     case 'delete': {
-      invariant(todo.id, 'missing id')
-      invariant(!isNaN(Number(todo.id)), 'id must be a number')
-      const { success } = await deleteTodo(env.DB, Number(todo.id))
+      const todo_parsed = deleteTodoSchema.parse(todo)
+      const { success } = await deleteTodo(env.DB, todo_parsed.id)
       invariant(success, 'failed to delete todo')
       return json({ success })
     }

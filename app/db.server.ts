@@ -1,6 +1,8 @@
 import { drizzle } from 'drizzle-orm/d1'
 import { todos } from './schema'
 import { eq } from 'drizzle-orm'
+import { createInsertSchema, createSelectSchema } from 'drizzle-zod'
+import { z } from 'zod'
 
 // const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
@@ -29,3 +31,9 @@ export const deleteTodo = async (db_binding: D1Database, id: number) => {
   const db = drizzle(db_binding)
   return db.delete(todos).where(eq(todos.id, id))
 }
+
+export const insertTodoSchema = createInsertSchema(todos)
+export const selectTodoSchema = createSelectSchema(todos, {
+  id: z.coerce.number().positive().int(),
+})
+export const deleteTodoSchema = selectTodoSchema.pick({ id: true })
